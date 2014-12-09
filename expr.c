@@ -358,7 +358,6 @@ char* infixToPrefix( char* s ) {
 
 	// reverse string
 	out = reverse(s);
-	printf("%s\n", out);
 	// perform a postfix conversion
 	out = infixToPostfix(out);
 	// reverse string
