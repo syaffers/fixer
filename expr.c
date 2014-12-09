@@ -10,11 +10,16 @@ char* clearBrackets( char* );
 char* infixToPostfix( char* );
 char* infixToPrefix( char* );
 char* postfixToInfix( char* );
+char* prefixToInfix( char* );
 char* removeSpaces( char* );
 char* reverse( char* );
+char* stackPop( void );
 int checkStringNotation( char* );
 int imbalancedParentheses( char* );
 int precedence( char );
+int stackLength( void );
+void stackDisplay( void );
+void stackPush( char* );
 
 typedef struct node {
 	char* string;
@@ -68,7 +73,8 @@ int main(void) {
 
 			break;
 		case PREFIX:
-			printf("You entered a prefix string. Options:\n");
+			printf("--------------------------------\n");
+			printf("It seems like you entered a prefix string. Options:\n");
 			printf("1) Convert to infix string\n");
 			printf("2) Convert to postfix string\n");
 			printf("3) Convert to both infix and postfix strings\n");
@@ -76,8 +82,23 @@ int main(void) {
 
 			scanf("%d", &choice);
 
+			if ( choice == 1 ) {
+				printf("Infix notation: %s\n", prefixToInfix(inputString));
+			}
+			else if ( choice == 2 ) {
+				printf("Prefix notation: %s\n", prefixToPostfix(inputString));
+			}
+			else if ( choice == 3) {
+				printf("Postfix notation: %s\n", prefixToInfix(inputString));
+				printf("Prefix notation: %s\n", prefixToPostfix(inputString));
+			}
+			else {
+				printf("Invalid choice.\n");
+			}
+
 			break;
 		case POSTFIX:
+			printf("--------------------------------\n");
 			printf("It seems like you entered a postfix string. Options:\n");
 			printf("1) Convert to infix string\n");
 			printf("2) Convert to prefix string\n");
@@ -90,11 +111,11 @@ int main(void) {
 				printf("Infix notation: %s\n", postfixToInfix(inputString));
 			}
 			else if ( choice == 2 ) {
-				printf("Prefix notation: %s\n", infixToPrefix(inputString));
+				printf("Prefix notation: %s\n", postfixToPrefix(inputString));
 			}
 			else if ( choice == 3) {
-				printf("Postfix notation: %s\n", infixToPostfix(inputString));
-				printf("Prefix notation: %s\n", infixToPrefix(inputString));
+				printf("Postfix notation: %s\n", postfixToInfix(inputString));
+				printf("Prefix notation: %s\n", postfixToPrefix(inputString));
 			}
 			else {
 				printf("Invalid choice.\n");
@@ -188,20 +209,6 @@ void stackDisplay( void ) {
 
 /******** END OF STACK OPERATIONS ********/
 
-char* clearBrackets( char* s ) {
-	// init output string
-	char* out = (char*)malloc(sizeof(char)*STR_LENGTH);
-	// if first char is ( and last char is )
-	if ( s[0] == '(' && s[strlen(s) - 1] == ')' ) {
-		// last char is str terminate
-		s[strlen(s) - 1] = '\0';
-		// output string points to second item in string
-		// (i.e after first open parentheses)
-		out = s + 1;
-	}
-
-	return out;	
-}
 
 /**
  * @brief Infix to Postfix string converter
@@ -403,6 +410,71 @@ char* postfixToInfix( char* s ) {
 	}
 }
 
+char* prefixToInfix( char* s ) {
+	// counter
+	int i;
+	
+	// output string and buffer for characters
+	char* out = (char*)malloc(sizeof(char)*STR_LENGTH);
+	char* buffer = (char*)malloc(sizeof(char)*STR_LENGTH);
+	// two extra strings to be used during popping
+	char* stringA = (char*)malloc(sizeof(char)*STR_LENGTH);
+	char* stringB = (char*)malloc(sizeof(char)*STR_LENGTH);
+
+	// for each character
+	for ( i = strlen(s) - 1; i >= 0; i-- ) {
+		// check character
+		switch (s[i]) {
+			// for operators
+			case '^':
+			case '/':
+			case '*':
+			case '+':
+			case '-':
+				// empty output string
+				strcpy(out,"");
+				// copy current char into string buffer
+				sprintf(buffer, "%c", s[i]);
+				// if there are less than two items in array, somethings wrong
+				if ( stackLength() < 2 ) {
+					return "Invalid infix string. Check your operators and operands.\n";
+				}
+				// otherwise
+				else {
+					// pop out top 2 items
+					strcpy(stringA, stackPop());
+					strcpy(stringB, stackPop());
+					// append left bracket to output string
+					strcat(out, "(");
+					// arrange output to be <operand1> <operator> <operand2>
+					strcat(out,stringA);
+					strcat(out,buffer);
+					strcat(out,stringB);
+					// append right bracket
+					strcat(out, ")");
+					// push back into stack
+					stackPush(out);
+				}
+				break;
+
+			// for everything else (operands)
+			default:
+				sprintf(buffer,"%c",s[i]);
+				stackPush(buffer);
+				break;
+		}
+	}
+
+	// if there is anything left after all is done, somethings wrong
+	if (stackLength() > 1) {
+		return "Invalid infix string. Check your operators and operands.\n";
+	}
+	// otherwise remove outside brackets and output infix string
+	else {
+		return clearBrackets(stackPop());
+	}
+}
+
 /**
  * @brief Remove spaces from input string
  * @details Remove spaces takes in a string and returns the address of
@@ -462,6 +534,28 @@ char* reverse( char* s ) {
 			r[strlen(s) - 1 - i] = s[i];
 	}
 	return r;
+}
+
+/**
+ * @brief Clear brackets
+ * @details Removes parentheses at both ends of a string
+ * 
+ * @param s Input string
+ * @return out Output string with removed parentheses
+ */
+char* clearBrackets( char* s ) {
+	// init output string
+	char* out = (char*)malloc(sizeof(char)*STR_LENGTH);
+	// if first char is ( and last char is )
+	if ( s[0] == '(' && s[strlen(s) - 1] == ')' ) {
+		// last char is str terminate
+		s[strlen(s) - 1] = '\0';
+		// output string points to second item in string
+		// (i.e after first open parentheses)
+		out = s + 1;
+	}
+
+	return out;	
 }
 
 /**
