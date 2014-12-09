@@ -6,12 +6,22 @@
 #define INFIX 2
 #define POSTFIX 3
 
-char* removeSpaces( char* );
-char* reverse( char* );
-int precedence( char );
-int checkStringNotation( char* );
+char* clearBrackets( char* );
 char* infixToPostfix( char* );
 char* infixToPrefix( char* );
+char* postfixToInfix( char* );
+char* removeSpaces( char* );
+char* reverse( char* );
+int checkStringNotation( char* );
+int imbalancedParentheses( char* );
+int precedence( char );
+
+typedef struct node {
+	char* string;
+	struct node* next;
+} node;
+
+node* top;
 
 int main(void) {
 	char* inputString;
@@ -19,11 +29,17 @@ int main(void) {
 	int type;
 	inputString = (char*)malloc(sizeof(char) * STR_LENGTH);
 
-	printf("Enter an expression (use letters for variables): ");
+	printf("Enter an expression (use single letters for variables): ");
 	fgets(inputString, STR_LENGTH, stdin);
 
 	// remove spaces to normalize string
 	inputString = removeSpaces(inputString);
+
+	// check for imba parentheses
+	if ( imbalancedParentheses(inputString) ) {
+		printf("\n");
+		return 1;
+	}
 
 	switch( checkStringNotation(inputString) ) {
 		case INFIX:
@@ -62,52 +78,129 @@ int main(void) {
 
 			break;
 		case POSTFIX:
-			printf("You entered a postfix string. Options:\n");
+			printf("It seems like you entered a postfix string. Options:\n");
 			printf("1) Convert to infix string\n");
 			printf("2) Convert to prefix string\n");
 			printf("3) Convert to both infix and prefix strings\n");
-			printf("Enter you choice: ");
+			printf("Enter your choice: ");
 
 			scanf("%d", &choice);
+
+			if ( choice == 1 ) {
+				printf("Infix notation: %s\n", postfixToInfix(inputString));
+			}
+			else if ( choice == 2 ) {
+				printf("Prefix notation: %s\n", infixToPrefix(inputString));
+			}
+			else if ( choice == 3) {
+				printf("Postfix notation: %s\n", infixToPostfix(inputString));
+				printf("Prefix notation: %s\n", infixToPrefix(inputString));
+			}
+			else {
+				printf("Invalid choice.\n");
+			}
 
 			break;
 	}
 
+	printf("\n");
 	return 0;
 }
 
-/**
- * @brief Remove spaces from input string
- * @details Remove spaces takes in a string and returns the address of
- * 			the new string with the whitespace and newline characters 
- * 			removed
- * 
- * @params s Input string
- * @return out Output string
- */
-char* removeSpaces( char* s ) {
-	// tokenizer variable
-	char* n;
-	// output string
-	char* out = malloc(sizeof(char) * STR_LENGTH);
+/******** START OF STACK OPERATIONS ********/
 
-	// remove newline at the end of input from getc and sub for EOL
-	if (s[strlen(s)-1] == '\n')
-		s[strlen(s)-1] = '\0';
+void stackPush( char* s ) {
+	// init node and new string
+	node* n;
+	char* t;
+	// assign mem
+	t = (char*)malloc(sizeof(char)*STR_LENGTH);
+	n = (node*)malloc(sizeof(node));
 
-	// tokenize input string
-	n = strtok(s, " ");
-	// initialize new string
-	strcpy(out,"");
+	strcpy(t, s);
 
-	do {
-		// concat tokenized string
-		strcat(out, n);
-		// continue tokeninzing
-		n = strtok(NULL, " ");
-	} while(n != '\0'); // until end
+	n->string = t;
+	n->next = 0;
 
-	return out;
+	if ( top == 0 ) {
+		top = n;
+	}
+	else {
+		n->next = top;
+		top = n;
+	}
+}
+
+char* stackPop( void ) {
+	// init output string
+	char* s;
+	s = (char*)malloc(sizeof(char)*STR_LENGTH);
+	// init node to be removed
+	node *p;
+
+	// if top is null
+	if ( top == 0 ) {
+		printf("Stack is empty\n");
+	}
+	// otherwise
+	else {
+		// copy topmost string into output
+		strcpy(s, top->string);
+		// top to be removed
+		p = top;
+		// printf("stackPopped %s\n", s);
+		// top takes the next items place
+		top = top->next;
+		// free removed item
+		free(p);
+	}
+
+	return s;
+}
+
+int stackLength( void ) {
+	// length counter
+	int length = 0;
+	// node pointer
+	node* p;
+
+	// check from top of stack until end
+	for( p = top; p != 0; p = p->next ) {
+		// increment as you traverse
+		length++;
+	}
+
+	// yeah
+	return length;
+}
+
+void stackDisplay( void ) {
+	// node pointer
+	node* p;
+
+	// printf stack
+	printf("\nStack:\n");
+	// print each item as you traverse
+	for( p = top; p != 0; p = p->next ) {
+		printf("%s\n", p->string);
+	}
+}
+
+/******** END OF STACK OPERATIONS ********/
+
+char* clearBrackets( char* s ) {
+	// init output string
+	char* out = (char*)malloc(sizeof(char)*STR_LENGTH);
+	// if first char is ( and last char is )
+	if ( s[0] == '(' && s[strlen(s) - 1] == ')' ) {
+		// last char is str terminate
+		s[strlen(s) - 1] = '\0';
+		// output string points to second item in string
+		// (i.e after first open parentheses)
+		out = s + 1;
+	}
+
+	return out;	
 }
 
 /**
@@ -141,7 +234,7 @@ char* infixToPostfix( char* s ) {
 			case '-':
 				// if left parentheses is at the top of stack
 				if ( opStack[strlen(opStack) - 1] == '(' ) {
-					// push current operator to top of stack
+					// stackPush current operator to top of stack
 					opStack[strlen(opStack)] = s[i];
 				}
 				// anything else
@@ -151,32 +244,32 @@ char* infixToPostfix( char* s ) {
 						// if left parentheses is found
 						// printf("opStack[j] is looking at: %c\n", opStack[j]);
 						if ( opStack[j] == '(') {
-							// proceed to pushing into stack
+							// proceed to stackPushing into stack
 							break;
 						}
 						// if a power-of character found and the precedence of top operator in 
 						// stack is less than precedence of power-of
 						else if ( (s[i] == '^') && (precedence(s[i]) < precedence(opStack[j])) ) {
-							// pop top operator in stack and append to postfix string
+							// stackPop top operator in stack and append to postfix string
 							out[strlen(out)] = opStack[j];
 							opStack[j] = '\0';
 						}
 						// other if an operator has a prencedence value equal to or less than
 						// top operator in stack 
 						else if ( precedence(s[i]) <= precedence(opStack[j]) ) {
-							// pop top operator in stack and append to postfix string
+							// stackPop top operator in stack and append to postfix string
 							out[strlen(out)] = opStack[j];
 							opStack[j] = '\0';
 						}
 					}
-					// push operator into stack
+					// stackPush operator into stack
 					opStack[strlen(opStack)] = s[i];
 				}
 				break;
 
 			// for left parentheses
 			case '(':
-				// push to operator stack
+				// stackPush to operator stack
 				opStack[strlen(opStack)] = s[i];
 				break;
 
@@ -186,12 +279,12 @@ char* infixToPostfix( char* s ) {
 				for ( j = strlen(opStack); j >= 0; j-- ) {
 					// if left parentheses found
 					if ( opStack[j] == '(') {
-						// pop from stack and exit
+						// stackPop from stack and exit
 						opStack[j] = '\0';
 						break;
 					}
 					else {
-						// pop operator out of stack into postfix string
+						// stackPop operator out of stack into postfix string
 						out[strlen(out)] = opStack[j];
 						opStack[j] = '\0';
 					}
@@ -233,6 +326,113 @@ char* infixToPrefix( char* s ) {
 	out = infixToPostfix(out);
 	// reverse string
 	out = reverse(out);
+
+	return out;
+}
+
+/**
+ * @brief Postfix to Infix Converter
+ * @details Converts a postfix string into an infix string by using
+ * 			the global stack
+ * 
+ * @param s Input string
+ * @return out Ouput string
+ */
+char* postfixToInfix( char* s ) {
+	// counter
+	int i;
+	
+	// output string and buffer for characters
+	char* out = (char*)malloc(sizeof(char)*STR_LENGTH);
+	char* buffer = (char*)malloc(sizeof(char)*STR_LENGTH);
+	// two extra strings to be used during popping
+	char* stringA = (char*)malloc(sizeof(char)*STR_LENGTH);
+	char* stringB = (char*)malloc(sizeof(char)*STR_LENGTH);
+
+	// for each character
+	for ( i = 0; i < strlen(s); i++ ) {
+		// check character
+		switch (s[i]) {
+			// for operators
+			case '^':
+			case '/':
+			case '*':
+			case '+':
+			case '-':
+				// empty output string
+				strcpy(out,"");
+				// copy current char into string buffer
+				sprintf(buffer, "%c", s[i]);
+				// if there are less than two items in array, somethings wrong
+				if ( stackLength() < 2 ) {
+					return "Invalid infix string. Check your operators and operands.\n";
+				}
+				// otherwise
+				else {
+					// pop out top 2 items
+					strcpy(stringA, stackPop());
+					strcpy(stringB, stackPop());
+					// append left bracket to output string
+					strcat(out, "(");
+					// arrange output to be <operand2> <operator> <operand1>
+					strcat(out,stringB);
+					strcat(out,buffer);
+					strcat(out,stringA);
+					// append right bracket
+					strcat(out, ")");
+					// push back into stack
+					stackPush(out);
+				}
+				break;
+
+			// for everything else (operands)
+			default:
+				sprintf(buffer,"%c",s[i]);
+				stackPush(buffer);
+				break;
+		}
+	}
+
+	// if there is anything left after all is done, somethings wrong
+	if (stackLength() > 1) {
+		return "Invalid infix string. Check your operators and operands.\n";
+	}
+	// otherwise remove outside brackets and output infix string
+	else {
+		return clearBrackets(stackPop());
+	}
+}
+
+/**
+ * @brief Remove spaces from input string
+ * @details Remove spaces takes in a string and returns the address of
+ * 			the new string with the whitespace and newline characters 
+ * 			removed
+ * 
+ * @params s Input string
+ * @return out Output string
+ */
+char* removeSpaces( char* s ) {
+	// tokenizer variable
+	char* n;
+	// output string
+	char* out = malloc(sizeof(char) * STR_LENGTH);
+
+	// remove newline at the end of input from getc and sub for EOL
+	if (s[strlen(s)-1] == '\n')
+		s[strlen(s)-1] = '\0';
+
+	// tokenize input string
+	n = strtok(s, " ");
+	// initialize new string
+	strcpy(out,"");
+
+	do {
+		// concat tokenized string
+		strcat(out, n);
+		// continue tokeninzing
+		n = strtok(NULL, " ");
+	} while(n != '\0'); // until end
 
 	return out;
 }
@@ -282,6 +482,38 @@ int checkStringNotation( char* s ) {
 	else {
 		return INFIX;
 	}
+}
+
+/**
+ * @brief Check parentheses balance
+ * @details Perform a check on an infix string to check the balance
+ * 			of parentheses
+ * 
+ * @param s Input string
+ * @return 1 = True, 0 = False
+ */	
+int imbalancedParentheses( char* s ) {
+	// initialize counters
+	int i;
+	int lpc = 0;
+	int rpc = 0;
+
+	// count left parentheses and right parentheses
+	for ( i = 0; i < strlen(s); i++ ) {
+		if ( s[i] == '(')
+			lpc++;
+		if ( s[i] == ')')
+			rpc++;
+	}
+
+	// if not balanced show message
+	if ( rpc > lpc )
+		printf("Imbalanced parentheses error. Too many right parentheses.\n");
+	else if ( rpc < lpc )
+		printf("Imbalanced parentheses error. Too many left parentheses.\n");
+
+	// returns true if not balanced
+	return rpc != lpc;
 }
 
 /**
