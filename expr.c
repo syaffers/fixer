@@ -9,8 +9,8 @@
 char* clearBrackets( char* );
 char* infixToPostfix( char* );
 char* infixToPrefix( char* );
-char* postfixToInfix( char* );
-char* prefixToInfix( char* );
+char* postfixToX( char*, int );
+char* prefixToX( char*, int );
 char* removeSpaces( char* );
 char* reverse( char* );
 char* stackPop( void );
@@ -83,14 +83,14 @@ int main(void) {
 			scanf("%d", &choice);
 
 			if ( choice == 1 ) {
-				printf("Infix notation: %s\n", prefixToInfix(inputString));
+				printf("Infix notation: %s\n", prefixToX(inputString, INFIX));
 			}
 			else if ( choice == 2 ) {
-				printf("Prefix notation: %s\n", prefixToPostfix(inputString));
+				printf("Prefix notation: %s\n", prefixToX(inputString, POSTFIX));
 			}
 			else if ( choice == 3) {
-				printf("Postfix notation: %s\n", prefixToInfix(inputString));
-				printf("Prefix notation: %s\n", prefixToPostfix(inputString));
+				printf("Infix notation: %s\n", prefixToX(inputString, INFIX));
+				printf("Prefix notation: %s\n", prefixToX(inputString, POSTFIX));
 			}
 			else {
 				printf("Invalid choice.\n");
@@ -108,14 +108,14 @@ int main(void) {
 			scanf("%d", &choice);
 
 			if ( choice == 1 ) {
-				printf("Infix notation: %s\n", postfixToInfix(inputString));
+				printf("Infix notation: %s\n", postfixToX(inputString, INFIX));
 			}
 			else if ( choice == 2 ) {
-				printf("Prefix notation: %s\n", postfixToPrefix(inputString));
+				printf("Prefix notation: %s\n", postfixToX(inputString, PREFIX));
 			}
 			else if ( choice == 3) {
-				printf("Postfix notation: %s\n", postfixToInfix(inputString));
-				printf("Prefix notation: %s\n", postfixToPrefix(inputString));
+				printf("Infix notation: %s\n", postfixToX(inputString, INFIX));
+				printf("Prefix notation: %s\n", postfixToX(inputString, PREFIX));
 			}
 			else {
 				printf("Invalid choice.\n");
@@ -130,6 +130,12 @@ int main(void) {
 
 /******** START OF STACK OPERATIONS ********/
 
+/**
+ * @brief Pushes a string into the global stack
+ * @details Pushes a string into the global stack in a linked list manner
+ * 
+ * @param s Input string
+ */
 void stackPush( char* s ) {
 	// init node and new string
 	node* n;
@@ -138,20 +144,33 @@ void stackPush( char* s ) {
 	t = (char*)malloc(sizeof(char)*STR_LENGTH);
 	n = (node*)malloc(sizeof(node));
 
+	// copy string to buffer
 	strcpy(t, s);
 
+	// set node string as the buffer value
 	n->string = t;
+	// set next node to point to null
 	n->next = 0;
 
+	// if the top of the global stack is none
 	if ( top == 0 ) {
+		// set top as current node
 		top = n;
 	}
 	else {
+		// push current top node down and set this node as top of stack
 		n->next = top;
 		top = n;
 	}
 }
 
+/**
+ * @brief Pop a string from stack
+ * @details Pop out a string from stack removing it from stack and
+ * 			returning it to the calling function
+ * 
+ * @return s String value of top node in stack
+ */
 char* stackPop( void ) {
 	// init output string
 	char* s;
@@ -179,6 +198,12 @@ char* stackPop( void ) {
 	return s;
 }
 
+/**
+ * @brief Get stack length
+ * @details Get stack length
+ * 
+ * @return length Length of the stack
+ */
 int stackLength( void ) {
 	// length counter
 	int length = 0;
@@ -195,6 +220,10 @@ int stackLength( void ) {
 	return length;
 }
 
+/**
+ * @brief Print out whole stack (used for debugging only)
+ * @details Traverse the whole stack and display each string
+ */
 void stackDisplay( void ) {
 	// node pointer
 	node* p;
@@ -329,6 +358,7 @@ char* infixToPrefix( char* s ) {
 
 	// reverse string
 	out = reverse(s);
+	printf("%s\n", out);
 	// perform a postfix conversion
 	out = infixToPostfix(out);
 	// reverse string
@@ -338,14 +368,16 @@ char* infixToPrefix( char* s ) {
 }
 
 /**
- * @brief Postfix to Infix Converter
- * @details Converts a postfix string into an infix string by using
- * 			the global stack
+ * @brief Postfix to Prefix/Infix Converter
+ * @details Converts a postfix notation string to prefix or infix
+ * 			given an output format. Uses the global stack
  * 
  * @param s Input string
- * @return out Ouput string
+ * @param outputFormat Format to be converted into (PREFIX/INFIX)
+ * 
+ * @return out Converted string
  */
-char* postfixToInfix( char* s ) {
+char* postfixToX( char* s, int outputFormat ) {
 	// counter
 	int i;
 	
@@ -376,19 +408,32 @@ char* postfixToInfix( char* s ) {
 				}
 				// otherwise
 				else {
-					// pop out top 2 items
-					strcpy(stringA, stackPop());
-					strcpy(stringB, stackPop());
-					// append left bracket to output string
-					strcat(out, "(");
-					// arrange output to be <operand2> <operator> <operand1>
-					strcat(out,stringB);
-					strcat(out,buffer);
-					strcat(out,stringA);
-					// append right bracket
-					strcat(out, ")");
-					// push back into stack
-					stackPush(out);
+					if ( outputFormat == INFIX ) {
+						// pop out top 2 items
+						strcpy(stringA, stackPop());
+						strcpy(stringB, stackPop());
+						// append left bracket to output string
+						strcat(out, "(");
+						// arrange output to be <operand2> <operator> <operand1>
+						strcat(out,stringB);
+						strcat(out,buffer);
+						strcat(out,stringA);
+						// append right bracket
+						strcat(out, ")");
+						// push back into stack
+						stackPush(out);
+					}
+					else if ( outputFormat == PREFIX ) {
+						// pop out top 2 items
+						strcpy(stringA, stackPop());
+						strcpy(stringB, stackPop());
+						// arrange output to be <operator> <operand2> <operand1>
+						strcat(out,buffer);
+						strcat(out,stringB);
+						strcat(out,stringA);
+						// push back into stack
+						stackPush(out);
+					}
 				}
 				break;
 
@@ -406,11 +451,24 @@ char* postfixToInfix( char* s ) {
 	}
 	// otherwise remove outside brackets and output infix string
 	else {
-		return clearBrackets(stackPop());
+		if ( outputFormat == INFIX )
+			return clearBrackets(stackPop());
+		else
+			return stackPop();
 	}
 }
 
-char* prefixToInfix( char* s ) {
+/**
+ * @brief Prefix to Postfix/Infix Converter
+ * @details Converts a prefix notation string to postfix or infix
+ * 			given an output format. Uses the global stack
+ * 
+ * @param s Input string
+ * @param outputFormat Format to be converted into (POSTFIX/INFIX)
+ * 
+ * @return out Converted string
+ */
+char* prefixToX( char* s, int outputFormat ) {
 	// counter
 	int i;
 	
@@ -441,19 +499,32 @@ char* prefixToInfix( char* s ) {
 				}
 				// otherwise
 				else {
-					// pop out top 2 items
-					strcpy(stringA, stackPop());
-					strcpy(stringB, stackPop());
-					// append left bracket to output string
-					strcat(out, "(");
-					// arrange output to be <operand1> <operator> <operand2>
-					strcat(out,stringA);
-					strcat(out,buffer);
-					strcat(out,stringB);
-					// append right bracket
-					strcat(out, ")");
-					// push back into stack
-					stackPush(out);
+					if ( outputFormat == INFIX ) {
+						// pop out top 2 items
+						strcpy(stringA, stackPop());
+						strcpy(stringB, stackPop());
+						// append left bracket to output string
+						strcat(out, "(");
+						// arrange output to be <operand1> <operator> <operand2>
+						strcat(out,stringA);
+						strcat(out,buffer);
+						strcat(out,stringB);
+						// append right bracket
+						strcat(out, ")");
+						// push back into stack
+						stackPush(out);
+					}
+					else if ( outputFormat == POSTFIX ) {
+						// pop out top 2 items
+						strcpy(stringA, stackPop());
+						strcpy(stringB, stackPop());
+						// arrange output to be <operand1> <operator> <operand2>
+						strcat(out,stringA);
+						strcat(out,stringB);
+						strcat(out,buffer);
+						// push back into stack
+						stackPush(out);
+					}
 				}
 				break;
 
@@ -471,7 +542,10 @@ char* prefixToInfix( char* s ) {
 	}
 	// otherwise remove outside brackets and output infix string
 	else {
-		return clearBrackets(stackPop());
+		if ( outputFormat == INFIX )
+			return clearBrackets(stackPop());
+		else 
+			return stackPop();
 	}
 }
 
