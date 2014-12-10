@@ -1,0 +1,7 @@
+ab+c+
+ab-c+d-
+abc-+d+
+a*b/c+d
+w-h-a-t
++++abcd
+-+abc+d

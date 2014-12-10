@@ -18,6 +18,7 @@ int checkStringNotation( char* );
 int imbalancedParentheses( char* );
 int precedence( char );
 int stackLength( void );
+void parseInput( char*, char* );
 void stackDisplay( void );
 void stackPush( char* );
 
@@ -30,30 +31,79 @@ node* top;
 
 int main(void) {
 	char* inputString;
-	int choice;
+	int inputSource;
 	int type;
+	int ch;
 	inputString = (char*)malloc(sizeof(char) * STR_LENGTH);
+	char* inputFileString = (char*)malloc(sizeof(char) * STR_LENGTH);
+	FILE* inputFile;
 
-	printf("Enter an expression (use single letters for variables): ");
-	fgets(inputString, STR_LENGTH, stdin);
+	printf("Choose input source (1 = Keyboard, 2 = File): ");
+	scanf("%d", &inputSource);
 
-	// remove spaces to normalize string
-	inputString = removeSpaces(inputString);
+	if ( inputSource == 1 ) {
+		// flush stdin
+		while( (ch = getchar()) != '\n' && ch != EOF );
+		// prompt and get
+		printf("\nEnter an expression (use single letters for variables): ");
+		fgets(inputString, STR_LENGTH, stdin);
+		// remove spaces to normalize string
+		inputString = removeSpaces(inputString);
+		parseInput(inputString, "output.txt");
+	}
+	else if ( inputSource == 2 ) {
+		// flush stdin
+		while( (ch = getchar()) != '\n' && ch != EOF );
+		// prompt and get
+		printf("\nEnter file path: ");
+		fgets(inputFileString, STR_LENGTH, stdin);
+		inputFileString[strlen(inputFileString)-1] = '\0';
+		inputFile = fopen(inputFileString, "r");
+		if( inputFile == NULL ) {
+			perror("Error opening file. Check that file exists and/or path is correct.\n");
+			return 2;
+		}
+		else {
+			while( !feof(inputFile) ) {
+				if ( fgets(inputString, STR_LENGTH, inputFile) ) {
+					if ( inputString[strlen(inputString) - 1] == '\n')
+						inputString[strlen(inputString) - 1] = '\0';
+					parseInput(inputString, inputFileString);
+				}
+			}
+		}
+	}
+	else {
+		printf("Invalid input.");
+		return 1;
+	}
+
+	printf("\n");
+	return 0;
+}
+
+void parseInput( char* inputString, char* outputFileString ) {
+	FILE* outputFile;
+	int choice;
+
+	outputFile = fopen(outputFileString, "a");
 
 	// check for imba parentheses
 	if ( imbalancedParentheses(inputString) ) {
 		printf("\n");
-		return 1;
+		return;
 	}
+
+	printf("\nReceived input: %s\n", inputString);
 
 	switch( checkStringNotation(inputString) ) {
 		case INFIX:
 			printf("--------------------------------\n");
-			printf("You entered an infix string. Options:\n");
+			printf("Received input is an infix string. Options:\n");
 			printf("1) Convert to postfix string\n");
 			printf("2) Convert to prefix string\n");
 			printf("3) Convert to both postfix and prefix strings\n");
-			printf("Enter you choice: ");
+			printf("\nEnter your choice: ");
 
 			scanf("%d", &choice);
 
@@ -74,11 +124,11 @@ int main(void) {
 			break;
 		case PREFIX:
 			printf("--------------------------------\n");
-			printf("It seems like you entered a prefix string. Options:\n");
+			printf("It seems that the received input is a prefix string. Options:\n");
 			printf("1) Convert to infix string\n");
 			printf("2) Convert to postfix string\n");
 			printf("3) Convert to both infix and postfix strings\n");
-			printf("Enter you choice: ");
+			printf("\nEnter your choice: ");
 
 			scanf("%d", &choice);
 
@@ -99,11 +149,11 @@ int main(void) {
 			break;
 		case POSTFIX:
 			printf("--------------------------------\n");
-			printf("It seems like you entered a postfix string. Options:\n");
+			printf("It seems that the received input is a postfix string. Options:\n");
 			printf("1) Convert to infix string\n");
 			printf("2) Convert to prefix string\n");
 			printf("3) Convert to both infix and prefix strings\n");
-			printf("Enter your choice: ");
+			printf("\nEnter your choice: ");
 
 			scanf("%d", &choice);
 
@@ -123,9 +173,6 @@ int main(void) {
 
 			break;
 	}
-
-	printf("\n");
-	return 0;
 }
 
 /******** START OF STACK OPERATIONS ********/
