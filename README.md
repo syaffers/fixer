@@ -1,7 +1,9 @@
 fixer
 =====
 
-Crappy program to convert infix/postfix/prefix strings to their counterparts. Basically it converts
+Crappy program to convert infix/postfix/prefix strings to their counterparts. Written in plain ANSI C using a stack and bunch of pointers and the likes. This is written as an exercise just so I can sharpen my more-than-rusty C therefore it's probably not well optimized. Hey, we all grow old okay? 
+
+Basically it converts:
 
 + Infix to Postfix or Prefix or both
 + Postfix to Prefix or Infix or both
