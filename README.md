@@ -26,3 +26,12 @@ e.g.
 
     ./expr
 
+You have an option to choose a file during the program runtime. Don't worry.
+
+Important Files
+-----
+
++ `expr`: The compiled program. Compiled in Ubuntu 14.04, recompile from the origin `expr.c` for best results.
++ `expr.c`: The source code for the program. Where the magic happens.
++ `input.txt`: The file that stores all the read lines from `stdin` in "console mode"
++ `output.txt`: The file that stores the output for uses in "console mode"
