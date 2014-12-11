@@ -1,7 +1,13 @@
 fixer
 =====
 
-Crappy program to convert infix/postfix/prefix strings to their counterparts. Not really done yet so don't hold your breath. The program can convert strings from an input file (reading line-by-line) or via the `stdin`. Up to you.
+Crappy program to convert infix/postfix/prefix strings to their counterparts. Basically it converts
+
++ Infix to Postfix or Prefix or both
++ Postfix to Prefix or Infix or both
++ Prefix to Postfix or Infix or... you get it
+
+Not really done yet so don't hold your breath. The program can convert strings from an input file (reading line-by-line) or via the `stdin`. Up to you.
 
 Usage
 -----
