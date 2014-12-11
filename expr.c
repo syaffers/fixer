@@ -56,12 +56,11 @@ typedef struct node {
 node* top;
 
 int main(void) {
-	char* inputString;
+	int ch;
 	int inputSource;
 	int type;
-	int ch;
-	inputString = (char*)malloc(sizeof(char) * STR_LENGTH);
 	char* inputFileString = (char*)malloc(sizeof(char) * STR_LENGTH);
+	char* inputString = (char*)malloc(sizeof(char) * STR_LENGTH);
 	FILE* inputFile;
 
 	printf("Choose input source (1 = Keyboard, 2 = File): ");
@@ -94,6 +93,7 @@ int main(void) {
 				if ( fgets(inputString, STR_LENGTH, inputFile) ) {
 					if ( inputString[strlen(inputString) - 1] == '\n')
 						inputString[strlen(inputString) - 1] = '\0';
+					inputString = removeSpaces(inputString);
 					parseInput(inputString, inputFileString);
 				}
 			}
