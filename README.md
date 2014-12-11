@@ -9,14 +9,20 @@ Usage
 ### Compiling
 
 Super easy:
+
     gcc expr.c -o <output filename>
+
 e.g.
+
     gcc expr.c -o expr
 
 ### Running
 
 Even easier:
+
     ./<output filename>
+
 e.g.
+
     ./expr
 
